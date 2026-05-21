@@ -285,7 +285,7 @@
     <input type="range" id="betaSlider" min="0.5" max="3.0" step="0.02" value="0.8">
     <span class="stat" id="betaVal">0.80</span>
     <span style="margin-left:auto; color:var(--text-3); font-size:0.85rem;">
-      K = 12 prototypes &nbsp;•&nbsp; supercritical pitchfork
+      schematic &nbsp;•&nbsp; K = 12 prototypes &nbsp;•&nbsp; supercritical pitchfork
     </span>
   </div>
 
@@ -817,23 +817,29 @@ const grokAnimDuration = 600;  // frames for full cycle
 
 // Synthetic trajectory matching canonical p=97 WD=1.0
 function grokTrajectory(step) {
-  // log_ratio_gmm: rises fast 0 → 40, then plateau ~3, then jumps to ~+4 at escape
+  // log_ratio_gmm: TWO pulses — first at β=βc crossing (predicts train acc),
+  // second at Act 3 escape (predicts test acc takeoff)
   let log_ratio;
-  if (step < 40) log_ratio = -2.5 + (step / 40) * 5;        // -2.5 → 2.5
-  else if (step < 8500) log_ratio = 2.5 + (step - 40) / 8460 * 0.6;  // gentle rise
-  else if (step < 9500) log_ratio = 3.1 + (step - 8500) / 1000 * 1.2;
+  if (step < 40) log_ratio = -2.5 + (step / 40) * 5;        // pulse 1: -2.5 → +2.5
+  else if (step < 8500) log_ratio = 2.5 + (step - 40) / 8460 * 0.6;  // plateau
+  else if (step < 9500) log_ratio = 3.1 + (step - 8500) / 1000 * 1.2;  // pulse 2: +3.1 → +4.3
   else log_ratio = 4.3 - (step - 9500) / 40500 * 0.4;
   // log10 NC1: high during Act 1+2, drops sharply at Act 3
   let log_nc1;
-  if (step < 8500) log_nc1 = 6.5 + 0.3 * Math.sin(step / 200);    // plateau
-  else if (step < 9500) log_nc1 = 6.5 - (step - 8500) / 1000 * 4.0;  // crash
+  if (step < 8500) log_nc1 = 6.5 + 0.3 * Math.sin(step / 200);
+  else if (step < 9500) log_nc1 = 6.5 - (step - 8500) / 1000 * 4.0;
   else log_nc1 = 2.5;
-  // test_acc: stays near 0 until escape
+  // test_acc: stays near 0 until Act 3 escape (lags pulse 2 slightly)
   let test_acc;
-  if (step < 8500) test_acc = 0.01 + 0.005 * Math.sin(step / 500);
-  else if (step < 9500) test_acc = 0.01 + (step - 8500) / 1000 * 0.99;
+  if (step < 8800) test_acc = 0.01 + 0.005 * Math.sin(step / 500);
+  else if (step < 9500) test_acc = 0.01 + (step - 8800) / 700 * 0.99;
   else test_acc = 1.0;
-  return { log_ratio, log_nc1, test_acc };
+  // train_acc: rises rapidly after β crosses βc (lags pulse 1 slightly)
+  let train_acc;
+  if (step < 60) train_acc = 0.02 + (step / 60) * 0.05;
+  else if (step < 300) train_acc = 0.07 + (step - 60) / 240 * 0.93;
+  else train_acc = 1.0 - 0.005 * Math.cos(step / 400);
+  return { log_ratio, log_nc1, test_acc, train_acc };
 }
 function drawGrokking() {
   const W = grokCanvas.logW, H = grokCanvas.logH;
@@ -883,8 +889,10 @@ function drawGrokking() {
   grokCtx.fillText('β = β_c', margin.l + plotW - 50, yToPxR(0) - 4);
 
   // Compute current animation progress
+  // ★ log-uniform in step (not linear) so early region (where prediction
+  // happens) gets proportional animation time instead of zooming past
   const cycleT = grokT / grokAnimDuration;
-  const stepCur = cycleT * grokTotalSteps;
+  const stepCur = Math.pow(10, cycleT * Math.log10(grokTotalSteps));
 
   // Draw curves up to current step
   const drawCurves = (toStep, alpha=1) => {
@@ -912,7 +920,18 @@ function drawGrokking() {
       if (i === 0) grokCtx.moveTo(x, y); else grokCtx.lineTo(x, y);
     }
     grokCtx.stroke(); grokCtx.setLineDash([]);
-    // test_acc
+    // train_acc (dark, rises early after pulse 1)
+    grokCtx.strokeStyle = `rgba(40, 40, 40, ${alpha * 0.85})`; grokCtx.lineWidth = 2.0;
+    grokCtx.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const step = Math.pow(10, Math.log10(toStep) * i / (samples - 1));
+      if (step < 1) continue;
+      const r = grokTrajectory(step);
+      const x = xToPx(step); const y = yToPxAcc(r.train_acc);
+      if (i === 0) grokCtx.moveTo(x, y); else grokCtx.lineTo(x, y);
+    }
+    grokCtx.stroke();
+    // test_acc (red, rises late after pulse 2)
     grokCtx.strokeStyle = `rgba(192, 57, 43, ${alpha})`; grokCtx.lineWidth = 2.5;
     grokCtx.beginPath();
     for (let i = 0; i < samples; i++) {
@@ -926,17 +945,71 @@ function drawGrokking() {
   };
   drawCurves(Math.max(2, stepCur));
 
-  // Legend
-  const legY = margin.t + 40;
-  grokCtx.fillStyle = '#c0392b'; grokCtx.fillRect(margin.l + plotW - 140, legY, 16, 3);
-  grokCtx.fillStyle = '#1a1f29'; grokCtx.font = '11px sans-serif';
-  grokCtx.fillText('test accuracy', margin.l + plotW - 120, legY + 4);
-  grokCtx.fillStyle = '#8e44ad'; grokCtx.fillRect(margin.l + plotW - 140, legY + 14, 16, 3);
-  grokCtx.fillText('log(β/β_c)', margin.l + plotW - 120, legY + 18);
+  // ★ Helper to draw a prediction-pulse marker on the purple curve
+  function drawPredictionPulse(stepAtPulse, cycleStart, label, sublabel) {
+    if (cycleT < cycleStart) return;
+    const pulse = Math.max(0, 1 - (cycleT - cycleStart) / 0.18);
+    const r = grokTrajectory(stepAtPulse);
+    const xPred = xToPx(stepAtPulse);
+    const yPred = yToPxR(r.log_ratio);            // ON the purple curve
+    // solid ring
+    grokCtx.strokeStyle = `rgba(142, 68, 173, 0.9)`;
+    grokCtx.lineWidth = 1.8 + pulse * 1.5;
+    grokCtx.beginPath();
+    grokCtx.arc(xPred, yPred, 6 + pulse * 7, 0, Math.PI * 2);
+    grokCtx.stroke();
+    // shockwave (fresh only)
+    if (pulse > 0) {
+      grokCtx.strokeStyle = `rgba(142, 68, 173, ${0.3 * pulse})`;
+      grokCtx.lineWidth = 1.0;
+      grokCtx.beginPath();
+      grokCtx.arc(xPred, yPred, 14 + (1 - pulse) * 28, 0, Math.PI * 2);
+      grokCtx.stroke();
+    }
+    grokCtx.fillStyle = `rgba(142, 68, 173, 0.95)`;
+    grokCtx.font = 'bold 11px sans-serif';
+    grokCtx.fillText(label, xPred + 14, yPred - 6);
+    grokCtx.fillStyle = `rgba(142, 68, 173, 0.65)`;
+    grokCtx.font = '9.5px sans-serif';
+    grokCtx.fillText(sublabel, xPred + 14, yPred + 7);
+  }
+  // Pulse 1: β crosses βc at step 20 → predicts train_acc rising
+  drawPredictionPulse(
+    20,
+    Math.log10(20) / Math.log10(grokTotalSteps),
+    '← train fit predicted from here',
+    '(β crosses β_c; train_acc still ~0)'
+  );
+  // Pulse 2: Act 3 escape onset at step 8500 → predicts test_acc takeoff
+  drawPredictionPulse(
+    8500,
+    Math.log10(8500) / Math.log10(grokTotalSteps),
+    '← grokking predicted from here',
+    '(test_acc still flat; takeoff ~300 steps away)'
+  );
+
+  // ★ Legend — upper-LEFT, 4 entries
+  const legY = margin.t + 14;
+  const legX = margin.l + 12;
+  grokCtx.fillStyle = 'rgba(255,255,255,0.92)';
+  grokCtx.fillRect(legX - 6, legY - 8, 138, 64);
+  grokCtx.strokeStyle = '#e3e7ee';
+  grokCtx.strokeRect(legX - 6, legY - 8, 138, 64);
+  grokCtx.font = '11px sans-serif';
+  // train acc (black)
+  grokCtx.fillStyle = 'rgba(40, 40, 40, 0.85)'; grokCtx.fillRect(legX, legY + 2, 16, 3);
+  grokCtx.fillStyle = '#1a1f29'; grokCtx.fillText('train accuracy', legX + 22, legY + 6);
+  // test acc (red)
+  grokCtx.fillStyle = '#c0392b'; grokCtx.fillRect(legX, legY + 16, 16, 3);
+  grokCtx.fillText('test accuracy', legX + 22, legY + 20);
+  // log(β/βc) (purple)
+  grokCtx.fillStyle = '#8e44ad'; grokCtx.fillRect(legX, legY + 30, 16, 3);
+  grokCtx.fillText('log(β/β_c)', legX + 22, legY + 34);
+  // log NC1 (green dashed)
   grokCtx.strokeStyle = '#27ae60'; grokCtx.setLineDash([5, 3]); grokCtx.lineWidth = 2.2;
-  grokCtx.beginPath(); grokCtx.moveTo(margin.l + plotW - 140, legY + 28); grokCtx.lineTo(margin.l + plotW - 124, legY + 28);
+  grokCtx.beginPath(); grokCtx.moveTo(legX, legY + 44); grokCtx.lineTo(legX + 16, legY + 44);
   grokCtx.stroke(); grokCtx.setLineDash([]);
-  grokCtx.fillStyle = '#1a1f29'; grokCtx.fillText('log₁₀ NC1', margin.l + plotW - 120, legY + 31);
+  grokCtx.fillStyle = '#1a1f29'; grokCtx.fillText('log₁₀ NC1', legX + 22, legY + 48);
 
   grokTimeEl.textContent = `step ${stepCur.toFixed(0)}`;
 }
