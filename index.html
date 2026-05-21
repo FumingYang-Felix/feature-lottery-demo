@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feature Lottery? A Bifurcation Theory of Concept Emergence — Interactive Demo</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f6fa;
+    --border: #e3e7ee;
+    --text: #1a1f29;
+    --text-2: #4a5568;
+    --text-3: #8b95a6;
+    --accent: #c0392b;
+    --accent-soft: #fff5f3;
+    --green: #27ae60;
+    --purple: #8e44ad;
+    --blue: #2980b9;
+    --orange: #d68910;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    line-height: 1.65;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1a2540;
+    margin-bottom: 0;
+    letter-spacing: -0.025em;
+  }
+  h1 .accent { color: #1a2540; font-weight: 800; }
+  .subtitle { color: var(--text-2); font-size: 1.1rem; margin-top: 6px; margin-bottom: 8px; }
+  .author { color: var(--text-3); font-size: 0.95rem; margin-bottom: 40px; }
+  .author a { color: var(--text-3); text-decoration: none; border-bottom: 1px dotted var(--text-3); }
+
+  .toc {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .toc a {
+    text-decoration: none;
+    color: var(--text-2);
+    font-size: 0.9rem;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    transition: all 0.15s;
+  }
+  .toc a:hover { background: var(--accent-soft); color: var(--accent); }
+
+  .demo {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .demo h2 {
+    font-size: 1.4rem;
+    margin-top: 0;
+    margin-bottom: 6px;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    letter-spacing: -0.01em;
+  }
+  .demo h2 .badge {
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .demo h2 .badge.green { background: var(--green); }
+  .demo h2 .badge.purple { background: var(--purple); }
+  .demo h2 .badge.blue { background: var(--blue); }
+  .demo h2 .badge.orange { background: var(--orange); }
+  .demo p { color: var(--text-2); }
+  .equation {
+    background: var(--surface-2);
+    padding: 12px 18px;
+    border-left: 3px solid var(--accent);
+    margin: 15px 0;
+    font-family: 'Cambria Math', 'STIX Two Math', serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    border-radius: 0 6px 6px 0;
+  }
+  canvas {
+    background: #ffffff;
+    border-radius: 6px;
+    display: block;
+    margin: 18px auto;
+    max-width: 100%;
+    border: 1px solid var(--border);
+  }
+  .controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+    color: var(--text-2);
+    font-size: 0.95rem;
+  }
+  .controls input[type=range] {
+    -webkit-appearance: none;
+    width: 220px;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    outline: none;
+  }
+  .controls input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(192,57,43,0.3);
+  }
+  .stat {
+    color: var(--text);
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.95rem;
+    padding: 3px 10px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  .regime-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+  }
+  .regime-grid > div {
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .regime-grid .label {
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .regime-grid .subtitle2 {
+    color: var(--text-3);
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+  .takeaway {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin-top: 20px;
+    color: var(--text);
+    font-size: 0.95rem;
+    border-radius: 0 6px 6px 0;
+  }
+  .takeaway strong { color: var(--accent); }
+  .citation-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-2);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .copy-btn {
+    background: var(--text);
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+  .copy-btn:hover { background: var(--accent); }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .info-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .info-card .label {
+    color: var(--text-3);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+  }
+  .info-card .value {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .info-card a { color: var(--accent); text-decoration: none; }
+  .info-card a:hover { text-decoration: underline; }
+  .footer {
+    color: var(--text-3);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1><span class="accent">Feature Lottery?</span></h1>
+<div class="subtitle">A Bifurcation Theory of Concept Emergence</div>
+<div class="author">
+  <a href="mailto:fumingy@mit.edu">Fuming Yang</a>, Department of Brain and Cognitive Sciences, MIT
+</div>
+
+<div class="toc">
+  <a href="#bif">① Pitchfork bifurcation</a>
+  <a href="#regimes">② Four trajectory shapes</a>
+  <a href="#lottery">③ Lottery animation</a>
+  <a href="#grokking">④ Grokking three-act</a>
+  <a href="#kramers">⑤ WD-intervention control</a>
+  <a href="#cite">⑥ Cite</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 1: Pitchfork bifurcation                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="bif">
+  <h2>① The Hessian-pitchfork mechanism <span class="badge">Theory</span></h2>
+
+  <p>
+    Attach a passive K-prototype isotropic GMM probe to a given encoder
+    representation. The loss Hessian at the symmetric collapsed state has
+    a zero crossing at:
+  </p>
+  <div class="equation">β<sub>c</sub> = 1 / λ<sub>max</sub>(Cov(z))</div>
+
+  <p>
+    Below β<sub>c</sub>, all prototypes pile at the data mean (symmetric collapsed state).
+    Above β<sub>c</sub>, the symmetric state becomes a saddle and prototypes pitchfork
+    along the principal eigenvector of Cov(z).
+  </p>
+
+  <canvas id="pitchforkCanvas" width="900" height="320"></canvas>
+
+  <div class="controls">
+    <span>β / β<sub>c</sub>:</span>
+    <input type="range" id="betaSlider" min="0.5" max="3.0" step="0.02" value="0.8">
+    <span class="stat" id="betaVal">0.80</span>
+    <span style="margin-left:auto; color:var(--text-3); font-size:0.85rem;">
+      K = 12 prototypes &nbsp;•&nbsp; supercritical pitchfork
+    </span>
+  </div>
+
+  <div class="takeaway">
+    <strong>Proposition 1:</strong> When the encoder co-evolves, β<sub>c</sub>(t)
+    becomes endogenous; under mild growth and non-collapse assumptions, β(t) and
+    β<sub>c</sub>(t) cross at a finite time.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 2: Four regimes                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="regimes">
+  <h2>② Four trajectory shapes <span class="badge green">Prop 3</span></h2>
+
+  <p>
+    The post-critical trajectory in (log(β/β<sub>c</sub>), log NC1) space takes
+    one of <strong>four observable shapes</strong>, determined by three binary
+    kinematic axes (initial criticality, post-onset rate ordering, dissipation rate):
+  </p>
+
+  <div class="regime-grid">
+    <div>
+      <div class="label" style="color:var(--accent)">(i) Full V</div>
+      <div class="subtitle2">SAE on frozen Pythia L6 — β<sub>c</sub> constant</div>
+      <canvas id="regime1" width="400" height="200"></canvas>
+    </div>
+    <div>
+      <div class="label" style="color:var(--green)">(ii) Fold-back (spectrum)</div>
+      <div class="subtitle2">DINO/SimCLR on CIFAR-10/100 — β<sub>c</sub>(t) rises</div>
+      <canvas id="regime2" width="400" height="200"></canvas>
+    </div>
+    <div>
+      <div class="label" style="color:var(--purple)">(iii) Delayed escape</div>
+      <div class="subtitle2">Grokking — low dissipation, long Act 2 plateau</div>
+      <canvas id="regime3" width="400" height="200"></canvas>
+    </div>
+    <div>
+      <div class="label" style="color:var(--text-3)">(iv) No arc (control)</div>
+      <div class="subtitle2">Rotation-prediction — no clustering pressure</div>
+      <canvas id="regime4" width="400" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    All four shapes are realized in our experiments; the framework forbids a
+    fifth shape under the same dynamics. A trajectory outside (i)–(iv) would
+    falsify the model.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 3: Lottery animation                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="lottery">
+  <h2>③ The lottery: directions decided at the bifurcation <span class="badge purple">Prop 2</span></h2>
+
+  <p>
+    At the Hessian-pitchfork onset, the unstable subspace is shared by all K−1
+    anti-symmetric modes. Each atom selects a direction from this common manifold
+    — and that initial direction is <em>preserved</em> as it grows toward the
+    attractor. We call this the <strong>feature lottery</strong>.
+  </p>
+
+  <canvas id="lotteryCanvas" width="900" height="380"></canvas>
+
+  <div class="controls">
+    <span class="stat" id="lotteryTime">step 0</span>
+    <span class="stat" id="lotteryRho">ρ(init, current) = 0.00</span>
+    <span style="margin-left:auto; color:var(--text-3); font-size:0.85rem;">
+      K=80 atoms &nbsp;•&nbsp; d=2 spatial dimension
+    </span>
+  </div>
+
+  <div class="takeaway">
+    <strong>Toy verification:</strong> Spearman ρ between initial direction and
+    direction at finite simulation time T is +0.948 ± 0.006 (5 seeds, K=200, d=10;
+    T within the persistence window τ<sub>r</sub> ≪ T ≪ T<sub>rand</sub>).<br>
+    <strong>SAE empirics:</strong> ρ<sub>id</sub> = 0.41 ± 0.04 between step-1,000
+    and step-20,000 POS purity (3 seeds, frequency-stratification robust). Top
+    decile of atoms ranked at 5% of training achieves convergence POS purity
+    <strong>0.82 ± 0.03</strong>, <strong>12.3× the uniform-random baseline</strong>.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 4: Grokking three-act                                      -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="grokking">
+  <h2>④ Grokking decomposes into three acts <span class="badge purple">Empirical</span></h2>
+
+  <p>
+    The cleanest empirical instance of post-critical metastability. Canonical run:
+    p=97, WD=1.0, n=3 seeds. The system <em>crosses β=β<sub>c</sub></em> at step ~40,
+    then sits on a metastable saddle for ~8,500 steps before weight decay's
+    dissipation drives the macroscopic transition.
+  </p>
+
+  <canvas id="grokCanvas" width="900" height="400"></canvas>
+
+  <div class="controls">
+    <span class="stat" id="grokTime">step 0</span>
+  </div>
+
+  <div class="takeaway">
+    <strong>Act 1:</strong> β crosses β<sub>c</sub> at step 37 ± 2 (universal across all configs).
+    <strong>Act 2:</strong> Metastable plateau, length set by dissipation.
+    <strong>Act 3:</strong> Escape at step 8900 ± 864 (canonical p=97, WD=1.0).
+    The indicator log(β/β<sub>c</sub>) ≈ +3 at step 100 already places the trajectory
+    in Act 2 — providing an early empirical forecast of grokking roughly
+    8,400 steps before test accuracy changes.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 5: Escape time vs weight decay (6-point sweep)             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="kramers">
+  <h2>⑤ WD-intervention control: metastable plateau length <span class="badge orange">Empirical</span></h2>
+
+  <p>
+    The Hessian-pitchfork crossing (§① / Remark 1) marks when the symmetric
+    state becomes <em>unstable</em> — not when the macroscopic transition
+    fires. To test that the plateau length is genuinely dissipation-controlled,
+    we sweep weight decay (a knob that does <em>not</em> shift the crossing)
+    and measure escape time:
+  </p>
+  <div class="equation">τ<sub>esc</sub> ≍ A · γ<sup>−p</sup>, &nbsp;&nbsp; p ≈ 1.23 &nbsp;<span style="color:var(--text-3); font-weight:400;">(empirical fit, not a theoretical prediction)</span></div>
+  <p>
+    Six WD levels, 3 seeds each, 200k-step horizon. Activation-dominated
+    Kramers form <em>τ ≍ τ<sub>0</sub> · exp((ΔS − κγ)/D)</em> is decisively
+    ruled out (<strong>ΔAIC = +19.3</strong>), pinning the grokking plateau
+    in the drift-dominated regime.
+  </p>
+
+  <canvas id="kramersCanvas" width="900" height="400"></canvas>
+
+  <div class="controls">
+    <span style="color:var(--text-3); font-size:0.85rem;">
+      Red dots: observed grok steps (3 seeds each, 200k horizon) • Blue arrow at γ=0: no escape in 50k •
+      Solid: activation-dominated fit • Dashed: power-law fit
+    </span>
+  </div>
+
+  <div class="takeaway">
+    <strong>What this supports:</strong> the framework's qualitative claim that
+    crossing ≠ macroscopic transition (Remark 1). τ<sub>esc</sub> grows
+    monotonically as γ ↓ across two decades (8.9k → 147k steps) and diverges
+    at γ = 0 (0/3 escape in 50k). The power-law exponent is an empirical
+    characterization of this grokking setup, not a derivation from the
+    bifurcation framework — a separate experiment in a different regime
+    (deep / wide barrier) could plausibly land in the activation-dominated
+    Kramers limit instead.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Demo 6: Cite                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="demo" id="cite">
+  <h2>⑥ Paper &amp; citation <span class="badge blue">Info</span></h2>
+
+  <p style="color: var(--text-2);">BibTeX:</p>
+  <div class="citation-block" id="bibtex">@article{yang2026featurelottery,
+  title   = {Feature Lottery? A Bifurcation Theory of Concept Emergence},
+  author  = {Yang, Fuming},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026}
+}</div>
+  <button class="copy-btn" onclick="copyBibtex()">Copy BibTeX</button>
+</div>
+
+<div class="footer">
+  Interactive demo • Built with vanilla HTML/JS, no dependencies •
+  Last updated: 2026
+</div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// HiDPI canvas upgrade — sharpens all canvases on Retina/HiDPI screens
+// ═══════════════════════════════════════════════════════════════
+const DPR = window.devicePixelRatio || 1;
+function upgradeCanvas(c) {
+  const w = c.width, h = c.height;       // logical/CSS dims
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  c.width = w * DPR;
+  c.height = h * DPR;
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  // expose logical dims for drawing math
+  c.logW = w; c.logH = h;
+  return ctx;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Demo 1: Pitchfork (auto-cycling β + slider override)
+// ═══════════════════════════════════════════════════════════════
+const pcCanvas = document.getElementById('pitchforkCanvas');
+const pcCtx    = upgradeCanvas(pcCanvas);
+const slider   = document.getElementById('betaSlider');
+const betaVal  = document.getElementById('betaVal');
+let userInteracting = false;
+let autoBetaT  = 0;
+const K = 12;
+const dataCov2D = [[1.5, 0], [0, 0.4]];
+
+function pitchforkAttractor(beta, alpha = 1.0) {
+  return beta > 1 ? Math.sqrt((beta - 1) / alpha) : 0;
+}
+function drawPitchfork() {
+  pcCtx.clearRect(0, 0, pcCanvas.logW, pcCanvas.logH);
+  const W = pcCanvas.logW, H = pcCanvas.logH;
+
+  // Left panel
+  const leftW = 380, leftH = 280, leftX = 20, leftY = 20;
+  pcCtx.strokeStyle = '#e3e7ee'; pcCtx.lineWidth = 1;
+  pcCtx.beginPath();
+  pcCtx.moveTo(leftX + 30, leftY); pcCtx.lineTo(leftX + 30, leftY + leftH);
+  pcCtx.moveTo(leftX + 30, leftY + leftH/2); pcCtx.lineTo(leftX + leftW - 10, leftY + leftH/2);
+  pcCtx.stroke();
+  pcCtx.fillStyle = '#8b95a6'; pcCtx.font = '12px sans-serif';
+  pcCtx.fillText('+ε*', leftX + 4, leftY + 12);
+  pcCtx.fillText('−ε*', leftX + 4, leftY + leftH - 4);
+  pcCtx.fillText('β / β_c', leftX + leftW - 60, leftY + leftH/2 + 16);
+
+  const xCrit = leftX + 30 + (1 - 0.5)/2.5 * (leftW - 40);
+  pcCtx.strokeStyle = '#c0392b'; pcCtx.setLineDash([3, 3]);
+  pcCtx.beginPath();
+  pcCtx.moveTo(xCrit, leftY + 5); pcCtx.lineTo(xCrit, leftY + leftH - 5);
+  pcCtx.stroke(); pcCtx.setLineDash([]);
+  pcCtx.fillStyle = '#c0392b'; pcCtx.font = 'italic 13px serif';
+  pcCtx.fillText('β_c', xCrit + 6, leftY + 30);
+
+  pcCtx.lineWidth = 2.5; pcCtx.strokeStyle = '#d68910';
+  pcCtx.beginPath();
+  pcCtx.moveTo(leftX + 30, leftY + leftH/2); pcCtx.lineTo(xCrit, leftY + leftH/2);
+  pcCtx.stroke();
+  pcCtx.setLineDash([3, 3]);
+  pcCtx.beginPath();
+  pcCtx.moveTo(xCrit, leftY + leftH/2); pcCtx.lineTo(leftX + leftW - 10, leftY + leftH/2);
+  pcCtx.stroke(); pcCtx.setLineDash([]);
+
+  pcCtx.beginPath();
+  for (let i = 0; i <= 100; i++) {
+    const beta = 1 + i / 100 * 1.5;
+    const eps = pitchforkAttractor(beta);
+    const x = leftX + 30 + (beta - 0.5)/2.5 * (leftW - 40);
+    const yUp = leftY + leftH/2 - eps * 60;
+    if (i === 0) pcCtx.moveTo(x, yUp); else pcCtx.lineTo(x, yUp);
+  }
+  pcCtx.stroke();
+  pcCtx.beginPath();
+  for (let i = 0; i <= 100; i++) {
+    const beta = 1 + i / 100 * 1.5;
+    const eps = pitchforkAttractor(beta);
+    const x = leftX + 30 + (beta - 0.5)/2.5 * (leftW - 40);
+    const yDown = leftY + leftH/2 + eps * 60;
+    if (i === 0) pcCtx.moveTo(x, yDown); else pcCtx.lineTo(x, yDown);
+  }
+  pcCtx.stroke();
+
+  const curBeta = parseFloat(slider.value);
+  const curEps = pitchforkAttractor(curBeta);
+  const xCur = leftX + 30 + (curBeta - 0.5)/2.5 * (leftW - 40);
+  pcCtx.fillStyle = '#c0392b';
+  pcCtx.beginPath();
+  pcCtx.arc(xCur, leftY + leftH/2 - curEps * 60, 6, 0, Math.PI * 2); pcCtx.fill();
+  pcCtx.beginPath();
+  pcCtx.arc(xCur, leftY + leftH/2 + curEps * 60, 6, 0, Math.PI * 2); pcCtx.fill();
+
+  // Right panel: 2D data + prototypes
+  const rightW = 380, rightH = 280, rightX = 480, rightY = 20;
+  pcCtx.strokeStyle = '#e3e7ee'; pcCtx.lineWidth = 1;
+  pcCtx.strokeRect(rightX, rightY, rightW, rightH);
+  pcCtx.fillStyle = '#8b95a6'; pcCtx.font = '12px sans-serif';
+  pcCtx.fillText('data (gray) + prototypes (red/blue)', rightX + 4, rightY - 4);
+
+  pcCtx.save();
+  pcCtx.translate(rightX + rightW/2, rightY + rightH/2);
+  pcCtx.strokeStyle = '#cbd2dc'; pcCtx.lineWidth = 1.5;
+  for (let r = 1; r <= 2; r++) {
+    pcCtx.beginPath();
+    pcCtx.ellipse(0, 0, 60 * Math.sqrt(dataCov2D[0][0]) * r,
+                  60 * Math.sqrt(dataCov2D[1][1]) * r, 0, 0, Math.PI * 2);
+    pcCtx.stroke();
+  }
+  pcCtx.fillStyle = 'rgba(139, 149, 166, 0.5)';
+  let s = 13371337;
+  function rand() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+  for (let i = 0; i < 200; i++) {
+    const u1 = rand(), u2 = rand();
+    const z1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const z2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+    pcCtx.beginPath();
+    pcCtx.arc(z1 * Math.sqrt(dataCov2D[0][0]) * 60,
+              z2 * Math.sqrt(dataCov2D[1][1]) * 60, 1.8, 0, Math.PI * 2);
+    pcCtx.fill();
+  }
+  for (let k = 0; k < K; k++) {
+    const angle = (k / K) * Math.PI * 2;
+    const noiseR = 8 * Math.sin(angle * 3 + k);
+    const symX = noiseR * Math.cos(angle); const symY = noiseR * Math.sin(angle);
+    const sign = (k % 2 === 0) ? 1 : -1;
+    const splitX = sign * curEps * 60 * Math.sqrt(dataCov2D[0][0]);
+    pcCtx.fillStyle = sign > 0 ? '#c0392b' : '#2980b9';
+    pcCtx.strokeStyle = '#ffffff'; pcCtx.lineWidth = 1.5;
+    pcCtx.beginPath();
+    pcCtx.arc(symX + splitX, symY, 9, 0, Math.PI * 2);
+    pcCtx.fill(); pcCtx.stroke();
+  }
+  pcCtx.restore();
+}
+
+slider.addEventListener('input', () => {
+  userInteracting = true;
+  betaVal.textContent = parseFloat(slider.value).toFixed(2);
+  drawPitchfork();
+  clearTimeout(slider._timer);
+  slider._timer = setTimeout(() => { userInteracting = false; }, 3000);
+});
+function autoBetaLoop() {
+  if (!userInteracting) {
+    autoBetaT += 0.005;
+    const v = 0.5 + 1.25 * (1 + Math.sin(autoBetaT * 2));
+    slider.value = v;
+    betaVal.textContent = v.toFixed(2);
+    drawPitchfork();
+  }
+  requestAnimationFrame(autoBetaLoop);
+}
+drawPitchfork();
+autoBetaLoop();
+
+// ═══════════════════════════════════════════════════════════════
+// Demo 2: Four regimes (auto-loop)
+// ═══════════════════════════════════════════════════════════════
+const regimes = [
+  { id: 'regime1', shape: 'fullV',  color: '#c0392b' },
+  { id: 'regime2', shape: 'foldback', color: '#27ae60' },
+  { id: 'regime3', shape: 'delayed', color: '#8e44ad' },
+  { id: 'regime4', shape: 'noarc',  color: '#8b95a6' },
+];
+let regimeTime = 0;
+function trajectoryPoint(shape, t) {
+  switch (shape) {
+    case 'fullV': {
+      const x = t * 5;
+      const y = (t < 0.3) ? 0.5 + 1.5 * (t / 0.3) : 1.7 - 1.5 * ((t - 0.3) / 0.7);
+      return { x, y };
+    }
+    case 'foldback': {
+      const x = (t < 0.4) ? t * 12 : 4.8 - (t - 0.4) * 3;
+      const y = (t < 0.4) ? 0.5 + 2.5 * (t / 0.4) : 3.0 - 1.8 * ((t - 0.4) / 0.6);
+      return { x, y };
+    }
+    case 'delayed': {
+      const x = (t < 0.1) ? t * 30 : (t < 0.9) ? 3 + (t - 0.1) * 1.5 : 4.2 - (t - 0.9) * 5;
+      const y = (t < 0.9) ? 3.5 : 3.5 - (t - 0.9) * 30;
+      return { x, y };
+    }
+    case 'noarc': {
+      const phase = t * 50;
+      const x = 2 + 3 * Math.sin(phase * 1.7);
+      const y = 1.5 + 1.5 * Math.cos(phase * 1.3 + 0.7);
+      return { x, y, scatter: true };
+    }
+  }
+}
+function drawRegime(regime, time) {
+  const canvas = document.getElementById(regime.id);
+  if (!canvas._upgraded) { canvas._ctx = upgradeCanvas(canvas); canvas._upgraded = true; }
+  const ctx = canvas._ctx;
+  const W = canvas.logW, H = canvas.logH;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#e3e7ee'; ctx.lineWidth = 1;
+  ctx.strokeRect(40, 15, W - 50, H - 50);
+  ctx.fillStyle = '#8b95a6'; ctx.font = '10px sans-serif';
+  ctx.fillText('log NC1', 4, 25);
+  ctx.fillText('log(β/β_c)', W - 65, H - 24);
+
+  const xToPx = x => 40 + (x + 1) / 6 * (W - 50);
+  const yToPx = y => H - 35 - y / 4 * (H - 50);
+
+  ctx.strokeStyle = '#cbd2dc'; ctx.setLineDash([2, 3]);
+  ctx.beginPath();
+  ctx.moveTo(xToPx(0), 15); ctx.lineTo(xToPx(0), H - 35); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (regime.shape === 'noarc') {
+    ctx.fillStyle = regime.color + 'aa';
+    for (let i = 0; i < time * 80; i++) {
+      const t = i / 80;
+      const pt = trajectoryPoint(regime.shape, t);
+      ctx.beginPath();
+      ctx.arc(xToPx(pt.x), yToPx(pt.y), 2, 0, Math.PI * 2); ctx.fill();
+    }
+  } else {
+    ctx.strokeStyle = regime.color; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const nPts = 100;
+    let first = true;
+    for (let i = 0; i <= nPts * time; i++) {
+      const t = i / nPts;
+      const pt = trajectoryPoint(regime.shape, t);
+      if (first) { ctx.moveTo(xToPx(pt.x), yToPx(pt.y)); first = false; }
+      else ctx.lineTo(xToPx(pt.x), yToPx(pt.y));
+    }
+    ctx.stroke();
+    const ptEnd = trajectoryPoint(regime.shape, time);
+    ctx.fillStyle = regime.color;
+    ctx.beginPath();
+    ctx.arc(xToPx(ptEnd.x), yToPx(ptEnd.y), 5, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function regimeLoop() {
+  regimeTime += 0.0035;
+  if (regimeTime > 1.4) regimeTime = -0.1;   // pause at 1, then reset (negative = blank)
+  const t = Math.max(0, Math.min(1, regimeTime));
+  regimes.forEach(r => drawRegime(r, t));
+  requestAnimationFrame(regimeLoop);
+}
+regimes.forEach(r => drawRegime(r, 0));
+regimeLoop();
+
+// ═══════════════════════════════════════════════════════════════
+// Demo 3: Lottery (auto-loop)
+// ═══════════════════════════════════════════════════════════════
+const lotteryCanvas = document.getElementById('lotteryCanvas');
+const lotteryCtx = upgradeCanvas(lotteryCanvas);
+const lotteryTimeEl = document.getElementById('lotteryTime');
+const lotteryRhoEl  = document.getElementById('lotteryRho');
+const N_atoms = 80;
+let atoms = [];
+let lotteryT = 0;
+const mu = 0.05, alpha = 0.5, D = 0.0008;
+function spearman(x, y) {
+  function rank(a) {
+    const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]);
+    const r = new Array(a.length);
+    idx.forEach((p, i) => { r[p[1]] = i + 1; });
+    return r;
+  }
+  const rx = rank(x), ry = rank(y);
+  const n = x.length, mx = (n + 1) / 2, my = (n + 1) / 2;
+  let cov = 0, vx = 0, vy = 0;
+  for (let i = 0; i < n; i++) {
+    cov += (rx[i] - mx) * (ry[i] - my);
+    vx += (rx[i] - mx) ** 2; vy += (ry[i] - my) ** 2;
+  }
+  return cov / Math.sqrt(vx * vy);
+}
+function initLottery() {
+  atoms = [];
+  for (let k = 0; k < N_atoms; k++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r0 = 0.05 + 0.02 * Math.random();
+    atoms.push({
+      x0: r0 * Math.cos(angle), y0: r0 * Math.sin(angle),
+      x: r0 * Math.cos(angle),  y: r0 * Math.sin(angle),
+      color: `hsl(${(angle / (Math.PI * 2) * 360) | 0}, 70%, 55%)`,
+      angleInit: angle,
+    });
+  }
+  lotteryT = 0;
+}
+function stepLottery() {
+  for (const a of atoms) {
+    const r2 = a.x * a.x + a.y * a.y;
+    const dr = mu - alpha * r2;
+    a.x += dr * a.x + (Math.random() - 0.5) * Math.sqrt(2*D);
+    a.y += dr * a.y + (Math.random() - 0.5) * Math.sqrt(2*D);
+  }
+}
+function drawLottery() {
+  const W = lotteryCanvas.logW, H = lotteryCanvas.logH;
+  lotteryCtx.clearRect(0, 0, W, H);
+  const panelW = W / 2 - 30; const panelH = H - 60; const scale = panelH * 0.4;
+  for (let p = 0; p < 2; p++) {
+    const cx = (p === 0 ? 20 : W/2 + 10) + panelW / 2;
+    const cy = 30 + panelH / 2;
+    lotteryCtx.strokeStyle = '#e3e7ee'; lotteryCtx.lineWidth = 1;
+    lotteryCtx.strokeRect(cx - panelW/2, cy - panelH/2, panelW, panelH);
+    lotteryCtx.strokeStyle = '#cbd2dc'; lotteryCtx.setLineDash([2,3]);
+    lotteryCtx.beginPath();
+    lotteryCtx.moveTo(cx - panelW/2, cy); lotteryCtx.lineTo(cx + panelW/2, cy);
+    lotteryCtx.moveTo(cx, cy - panelH/2); lotteryCtx.lineTo(cx, cy + panelH/2);
+    lotteryCtx.stroke(); lotteryCtx.setLineDash([]);
+    lotteryCtx.fillStyle = '#1a1f29'; lotteryCtx.font = 'bold 13px sans-serif';
+    lotteryCtx.fillText(p === 0 ? 'Initial state (t = 0)' : `Current state (t = ${lotteryT})`,
+                        cx - panelW/2 + 8, 20);
+  }
+  for (const a of atoms) {
+    const cx0 = 20 + panelW / 2; const cy0 = 30 + panelH / 2;
+    const cx1 = W/2 + 10 + panelW / 2; const cy1 = 30 + panelH / 2;
+    lotteryCtx.fillStyle = a.color;
+    lotteryCtx.beginPath();
+    lotteryCtx.arc(cx0 + a.x0 * scale * 8, cy0 - a.y0 * scale * 8, 3, 0, Math.PI * 2); lotteryCtx.fill();
+    lotteryCtx.beginPath();
+    lotteryCtx.arc(cx1 + a.x * scale, cy1 - a.y * scale, 4, 0, Math.PI * 2); lotteryCtx.fill();
+  }
+  const proj0 = atoms.map(a => a.x0); const projT = atoms.map(a => a.x);
+  const rho = spearman(proj0, projT);
+  lotteryTimeEl.textContent = `step ${lotteryT}`;
+  lotteryRhoEl.textContent = `ρ(init, current) = ${rho.toFixed(2)}`;
+}
+function lotteryLoop() {
+  if (lotteryT < 700) { stepLottery(); lotteryT++; }
+  else if (lotteryT < 750) { lotteryT++; }   // pause showing final state
+  else { initLottery(); }
+  drawLottery();
+  requestAnimationFrame(lotteryLoop);
+}
+initLottery();
+lotteryLoop();
+
+// ═══════════════════════════════════════════════════════════════
+// Demo 4: Grokking three-act (auto-loop)
+// ═══════════════════════════════════════════════════════════════
+const grokCanvas = document.getElementById('grokCanvas');
+const grokCtx = upgradeCanvas(grokCanvas);
+const grokTimeEl = document.getElementById('grokTime');
+let grokT = 0;
+const grokTotalSteps = 50000;
+const grokAnimDuration = 600;  // frames for full cycle
+
+// Synthetic trajectory matching canonical p=97 WD=1.0
+function grokTrajectory(step) {
+  // log_ratio_gmm: rises fast 0 → 40, then plateau ~3, then jumps to ~+4 at escape
+  let log_ratio;
+  if (step < 40) log_ratio = -2.5 + (step / 40) * 5;        // -2.5 → 2.5
+  else if (step < 8500) log_ratio = 2.5 + (step - 40) / 8460 * 0.6;  // gentle rise
+  else if (step < 9500) log_ratio = 3.1 + (step - 8500) / 1000 * 1.2;
+  else log_ratio = 4.3 - (step - 9500) / 40500 * 0.4;
+  // log10 NC1: high during Act 1+2, drops sharply at Act 3
+  let log_nc1;
+  if (step < 8500) log_nc1 = 6.5 + 0.3 * Math.sin(step / 200);    // plateau
+  else if (step < 9500) log_nc1 = 6.5 - (step - 8500) / 1000 * 4.0;  // crash
+  else log_nc1 = 2.5;
+  // test_acc: stays near 0 until escape
+  let test_acc;
+  if (step < 8500) test_acc = 0.01 + 0.005 * Math.sin(step / 500);
+  else if (step < 9500) test_acc = 0.01 + (step - 8500) / 1000 * 0.99;
+  else test_acc = 1.0;
+  return { log_ratio, log_nc1, test_acc };
+}
+function drawGrokking() {
+  const W = grokCanvas.logW, H = grokCanvas.logH;
+  grokCtx.clearRect(0, 0, W, H);
+  // X-axis log scale 1 → 50000
+  const margin = { l: 60, r: 30, t: 30, b: 50 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const xToPx = step => margin.l + (Math.log10(Math.max(1, step)) / Math.log10(50000)) * plotW;
+  const yToPxAcc = v => margin.t + plotH - v * plotH * 0.8;
+  const yToPxR  = v => margin.t + plotH - (v + 4) / 12 * plotH;
+
+  // Axes
+  grokCtx.strokeStyle = '#e3e7ee'; grokCtx.lineWidth = 1;
+  grokCtx.strokeRect(margin.l, margin.t, plotW, plotH);
+  // X-ticks
+  grokCtx.fillStyle = '#8b95a6'; grokCtx.font = '11px sans-serif';
+  [1, 10, 100, 1000, 10000].forEach(t => {
+    const x = xToPx(t);
+    grokCtx.fillText(t.toString(), x - 8, H - 30);
+    grokCtx.strokeStyle = '#f4f6fa'; grokCtx.lineWidth = 1;
+    grokCtx.beginPath(); grokCtx.moveTo(x, margin.t); grokCtx.lineTo(x, margin.t + plotH); grokCtx.stroke();
+  });
+  grokCtx.fillStyle = '#8b95a6';
+  grokCtx.fillText('training step', W/2 - 30, H - 10);
+
+  // Phase bands (always shown)
+  // Act 1: 0-40, Act 2: 40-8500, Act 3: 8500-9500
+  grokCtx.fillStyle = 'rgba(192, 57, 43, 0.06)';
+  grokCtx.fillRect(margin.l, margin.t, xToPx(40) - margin.l, plotH);
+  grokCtx.fillStyle = 'rgba(214, 137, 16, 0.06)';
+  grokCtx.fillRect(xToPx(40), margin.t, xToPx(8500) - xToPx(40), plotH);
+  grokCtx.fillStyle = 'rgba(39, 174, 96, 0.08)';
+  grokCtx.fillRect(xToPx(8500), margin.t, xToPx(9500) - xToPx(8500), plotH);
+
+  grokCtx.fillStyle = '#1a1f29'; grokCtx.font = 'bold 11px sans-serif';
+  grokCtx.fillText('Act 1', xToPx(15), margin.t + 18);
+  grokCtx.fillText('Act 2 (metastable plateau)', xToPx(200), margin.t + 18);
+  grokCtx.fillText('Act 3', xToPx(8700), margin.t + 18);
+
+  // β = β_c line
+  grokCtx.strokeStyle = '#cbd2dc'; grokCtx.setLineDash([3, 3]);
+  grokCtx.beginPath();
+  grokCtx.moveTo(margin.l, yToPxR(0)); grokCtx.lineTo(margin.l + plotW, yToPxR(0));
+  grokCtx.stroke(); grokCtx.setLineDash([]);
+  grokCtx.fillStyle = '#cbd2dc'; grokCtx.font = 'italic 10px serif';
+  grokCtx.fillText('β = β_c', margin.l + plotW - 50, yToPxR(0) - 4);
+
+  // Compute current animation progress
+  const cycleT = grokT / grokAnimDuration;
+  const stepCur = cycleT * grokTotalSteps;
+
+  // Draw curves up to current step
+  const drawCurves = (toStep, alpha=1) => {
+    const samples = 200;
+    // log(β/βc)
+    grokCtx.strokeStyle = `rgba(142, 68, 173, ${alpha})`; grokCtx.lineWidth = 2.5;
+    grokCtx.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const step = Math.pow(10, Math.log10(toStep) * i / (samples - 1));
+      if (step < 1) continue;
+      const r = grokTrajectory(step);
+      const x = xToPx(step); const y = yToPxR(r.log_ratio);
+      if (i === 0) grokCtx.moveTo(x, y); else grokCtx.lineTo(x, y);
+    }
+    grokCtx.stroke();
+    // log NC1
+    grokCtx.strokeStyle = `rgba(39, 174, 96, ${alpha})`; grokCtx.lineWidth = 2.2;
+    grokCtx.setLineDash([5, 3]);
+    grokCtx.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const step = Math.pow(10, Math.log10(toStep) * i / (samples - 1));
+      if (step < 1) continue;
+      const r = grokTrajectory(step);
+      const x = xToPx(step); const y = yToPxR(r.log_nc1 - 5);
+      if (i === 0) grokCtx.moveTo(x, y); else grokCtx.lineTo(x, y);
+    }
+    grokCtx.stroke(); grokCtx.setLineDash([]);
+    // test_acc
+    grokCtx.strokeStyle = `rgba(192, 57, 43, ${alpha})`; grokCtx.lineWidth = 2.5;
+    grokCtx.beginPath();
+    for (let i = 0; i < samples; i++) {
+      const step = Math.pow(10, Math.log10(toStep) * i / (samples - 1));
+      if (step < 1) continue;
+      const r = grokTrajectory(step);
+      const x = xToPx(step); const y = yToPxAcc(r.test_acc);
+      if (i === 0) grokCtx.moveTo(x, y); else grokCtx.lineTo(x, y);
+    }
+    grokCtx.stroke();
+  };
+  drawCurves(Math.max(2, stepCur));
+
+  // Legend
+  const legY = margin.t + 40;
+  grokCtx.fillStyle = '#c0392b'; grokCtx.fillRect(margin.l + plotW - 140, legY, 16, 3);
+  grokCtx.fillStyle = '#1a1f29'; grokCtx.font = '11px sans-serif';
+  grokCtx.fillText('test accuracy', margin.l + plotW - 120, legY + 4);
+  grokCtx.fillStyle = '#8e44ad'; grokCtx.fillRect(margin.l + plotW - 140, legY + 14, 16, 3);
+  grokCtx.fillText('log(β/β_c)', margin.l + plotW - 120, legY + 18);
+  grokCtx.strokeStyle = '#27ae60'; grokCtx.setLineDash([5, 3]); grokCtx.lineWidth = 2.2;
+  grokCtx.beginPath(); grokCtx.moveTo(margin.l + plotW - 140, legY + 28); grokCtx.lineTo(margin.l + plotW - 124, legY + 28);
+  grokCtx.stroke(); grokCtx.setLineDash([]);
+  grokCtx.fillStyle = '#1a1f29'; grokCtx.fillText('log₁₀ NC1', margin.l + plotW - 120, legY + 31);
+
+  grokTimeEl.textContent = `step ${stepCur.toFixed(0)}`;
+}
+function grokLoop() {
+  grokT += 1;
+  if (grokT > grokAnimDuration + 60) grokT = 0;   // pause + reset
+  drawGrokking();
+  requestAnimationFrame(grokLoop);
+}
+drawGrokking();
+grokLoop();
+
+// ═══════════════════════════════════════════════════════════════
+// Demo 5: Kramers escape vs WD (static plot, all data shown)
+// ═══════════════════════════════════════════════════════════════
+const kramersCanvas = document.getElementById('kramersCanvas');
+const kramersCtx = upgradeCanvas(kramersCanvas);
+
+// Long-horizon 200k-step sweep: 6 escape points + 1 censored control at WD=0
+const kramersData = [
+  // WD, mean, std, status (escaped / censored)
+  { wd: 0.1, mean: 147167, std: 23618, status: 'escaped', seedsPct: '3/3' },
+  { wd: 0.2, mean: 88033,  std: 27091, status: 'escaped', seedsPct: '3/3' },
+  { wd: 0.3, mean: 38150,  std: 4250,  status: 'escaped', seedsPct: '3/3' },
+  { wd: 0.5, mean: 22433,  std: 6064,  status: 'escaped', seedsPct: '3/3' },
+  { wd: 0.7, mean: 16633,  std: 5008,  status: 'escaped', seedsPct: '3/3' },
+  { wd: 1.0, mean: 8900,   std: 864,   status: 'escaped', seedsPct: '3/3' },
+];
+// Kramers fit (decisively ruled out): log τ = 11.651 - 2.631 γ
+const kramersFit = γ => Math.exp(11.651 - 2.631 * γ);
+// Power-law fit (favored): log τ = 9.110 - 1.225 log γ  ⇒  τ = exp(9.110) · γ^(-1.225)
+const powerlawFit = γ => Math.exp(9.110) / Math.pow(γ, 1.225);
+
+let kramersT = 0;
+function drawKramers() {
+  const W = kramersCanvas.logW, H = kramersCanvas.logH;
+  kramersCtx.clearRect(0, 0, W, H);
+  const margin = { l: 70, r: 80, t: 30, b: 60 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const xLo = 0.0, xHi = 1.1;
+  const yLo = Math.log(5000), yHi = Math.log(250000);
+  const xToPx = γ => margin.l + (γ - xLo) / (xHi - xLo) * plotW;
+  const yToPx = logτ => margin.t + plotH - (logτ - yLo) / (yHi - yLo) * plotH;
+
+  // Axes + grid
+  kramersCtx.strokeStyle = '#e3e7ee'; kramersCtx.lineWidth = 1;
+  kramersCtx.strokeRect(margin.l, margin.t, plotW, plotH);
+  kramersCtx.fillStyle = '#8b95a6'; kramersCtx.font = '11px sans-serif';
+
+  [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0].forEach(g => {
+    const x = xToPx(g);
+    kramersCtx.fillText(g.toString(), x - 7, H - margin.b + 18);
+    kramersCtx.strokeStyle = '#f4f6fa';
+    kramersCtx.beginPath(); kramersCtx.moveTo(x, margin.t); kramersCtx.lineTo(x, margin.t + plotH);
+    kramersCtx.stroke();
+  });
+  [10000, 30000, 60000, 100000, 150000].forEach(τ => {
+    const y = yToPx(Math.log(τ));
+    if (y > margin.t && y < margin.t + plotH) {
+      kramersCtx.fillText(τ >= 1000 ? `${τ/1000}k` : `${τ}`, 30, y + 4);
+      kramersCtx.strokeStyle = '#f4f6fa';
+      kramersCtx.beginPath(); kramersCtx.moveTo(margin.l, y); kramersCtx.lineTo(margin.l + plotW, y);
+      kramersCtx.stroke();
+    }
+  });
+
+  kramersCtx.fillStyle = '#1a1f29'; kramersCtx.font = '13px sans-serif';
+  kramersCtx.fillText('weight decay γ', W/2 - 40, H - 10);
+  kramersCtx.save();
+  kramersCtx.translate(20, H/2 + 40); kramersCtx.rotate(-Math.PI/2);
+  kramersCtx.fillText('τ_esc (grok step)', 0, 0);
+  kramersCtx.restore();
+
+  // 200k horizon line (where all real escapes occurred under)
+  kramersCtx.strokeStyle = 'rgba(33, 41, 50, 0.15)';
+  kramersCtx.setLineDash([5, 5]); kramersCtx.lineWidth = 1.5;
+  const y200k = yToPx(Math.log(200000));
+  kramersCtx.beginPath();
+  kramersCtx.moveTo(margin.l, y200k); kramersCtx.lineTo(margin.l + plotW, y200k);
+  kramersCtx.stroke(); kramersCtx.setLineDash([]);
+  kramersCtx.fillStyle = '#8b95a6'; kramersCtx.font = '10px sans-serif';
+  kramersCtx.fillText('200k step horizon', margin.l + plotW - 100, y200k - 4);
+
+  // Fits — animated reveal up to current γ
+  const γMax = xLo + (xHi - xLo) * (kramersT / 500);
+  // Kramers
+  kramersCtx.strokeStyle = '#c0392b'; kramersCtx.lineWidth = 2.5;
+  kramersCtx.beginPath();
+  let firstPt = true;
+  for (let g = xLo; g <= Math.min(γMax, xHi); g += 0.005) {
+    const τ = kramersFit(g);
+    if (τ > 0 && τ < 1e7) {
+      const x = xToPx(g); const y = yToPx(Math.log(τ));
+      if (firstPt) { kramersCtx.moveTo(x, y); firstPt = false; }
+      else kramersCtx.lineTo(x, y);
+    }
+  }
+  kramersCtx.stroke();
+  // Power-law
+  kramersCtx.strokeStyle = '#2980b9'; kramersCtx.lineWidth = 2; kramersCtx.setLineDash([6, 4]);
+  kramersCtx.beginPath();
+  firstPt = true;
+  for (let g = xLo; g <= Math.min(γMax, xHi); g += 0.005) {
+    const τ = powerlawFit(g);
+    if (τ > 0 && τ < 1e7) {
+      const x = xToPx(g); const y = yToPx(Math.log(τ));
+      if (firstPt) { kramersCtx.moveTo(x, y); firstPt = false; }
+      else kramersCtx.lineTo(x, y);
+    }
+  }
+  kramersCtx.stroke(); kramersCtx.setLineDash([]);
+
+  // Data points (revealed gradually)
+  kramersData.forEach((d, i) => {
+    if (d.wd > γMax) return;
+    const x = xToPx(d.wd);
+    const y = yToPx(Math.log(d.mean));
+    const yLo_err = yToPx(Math.log(d.mean - d.std));
+    const yHi_err = yToPx(Math.log(d.mean + d.std));
+    // Error bar
+    kramersCtx.strokeStyle = '#c0392b'; kramersCtx.lineWidth = 1.5;
+    kramersCtx.beginPath();
+    kramersCtx.moveTo(x, yLo_err); kramersCtx.lineTo(x, yHi_err); kramersCtx.stroke();
+    // Point
+    kramersCtx.fillStyle = '#c0392b'; kramersCtx.strokeStyle = '#ffffff'; kramersCtx.lineWidth = 1.5;
+    kramersCtx.beginPath();
+    kramersCtx.arc(x, y, 6, 0, Math.PI * 2); kramersCtx.fill(); kramersCtx.stroke();
+    kramersCtx.fillStyle = '#1a1f29'; kramersCtx.font = '10px sans-serif';
+    kramersCtx.fillText(`${(d.mean/1000).toFixed(1)}k`, x + 8, y + 4);
+  });
+  // WD=0 control: no escape in 50k → up arrow
+  if (xLo <= γMax) {
+    const xC = xToPx(0.0);
+    const yC = yToPx(Math.log(50000));
+    kramersCtx.strokeStyle = '#2980b9'; kramersCtx.lineWidth = 2;
+    kramersCtx.beginPath();
+    kramersCtx.moveTo(xC, yC); kramersCtx.lineTo(xC, yC - 30); kramersCtx.stroke();
+    kramersCtx.beginPath();
+    kramersCtx.moveTo(xC, yC - 30); kramersCtx.lineTo(xC - 5, yC - 22);
+    kramersCtx.moveTo(xC, yC - 30); kramersCtx.lineTo(xC + 5, yC - 22);
+    kramersCtx.stroke();
+    kramersCtx.fillStyle = '#2980b9'; kramersCtx.font = '10px sans-serif';
+    kramersCtx.fillText('> 50k (0/3)', xC + 6, yC - 22);
+  }
+
+  // Legend
+  const legX = margin.l + plotW - 260, legY = margin.t + 12;
+  kramersCtx.fillStyle = 'rgba(255,255,255,0.95)';
+  kramersCtx.fillRect(legX - 6, legY - 8, 260, 56);
+  kramersCtx.strokeStyle = '#e3e7ee'; kramersCtx.strokeRect(legX - 6, legY - 8, 260, 56);
+  kramersCtx.strokeStyle = '#c0392b'; kramersCtx.lineWidth = 2.5;
+  kramersCtx.beginPath(); kramersCtx.moveTo(legX, legY + 4); kramersCtx.lineTo(legX + 20, legY + 4); kramersCtx.stroke();
+  kramersCtx.fillStyle = '#1a1f29'; kramersCtx.font = '10.5px sans-serif';
+  kramersCtx.fillText('Activation-dominated: log τ = 11.65 − 2.63γ', legX + 25, legY + 7);
+  kramersCtx.strokeStyle = '#2980b9'; kramersCtx.setLineDash([6, 4]); kramersCtx.lineWidth = 2;
+  kramersCtx.beginPath(); kramersCtx.moveTo(legX, legY + 22); kramersCtx.lineTo(legX + 20, legY + 22); kramersCtx.stroke();
+  kramersCtx.setLineDash([]);
+  kramersCtx.fillText('Power-law: τ ∝ γ^(−1.23)', legX + 25, legY + 25);
+  kramersCtx.font = '9px sans-serif'; kramersCtx.fillStyle = '#27ae60';
+  kramersCtx.fillText('ΔAIC = +19.3 (power-law decisive)', legX, legY + 42);
+}
+function kramersLoop() {
+  kramersT += 1.5;
+  if (kramersT > 580) kramersT = 0;
+  drawKramers();
+  requestAnimationFrame(kramersLoop);
+}
+drawKramers();
+kramersLoop();
+
+// ═══════════════════════════════════════════════════════════════
+// Citation copy
+// ═══════════════════════════════════════════════════════════════
+function copyBibtex() {
+  const text = document.getElementById('bibtex').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+</script>
+
+</body>
+</html>
