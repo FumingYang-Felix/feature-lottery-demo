@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Feature Lottery? A Bifurcation Theory of Concept Emergence — Interactive Demo</title>
+<title>Feature Lottery? A Bifurcation Theory of Concept Emergence  ·  Interactive Demo</title>
 <style>
   :root {
     --bg: #fafafa;
@@ -311,22 +311,22 @@
   <div class="regime-grid">
     <div>
       <div class="label" style="color:var(--accent)">(i) Full V</div>
-      <div class="subtitle2">SAE on frozen Pythia L6 — β<sub>c</sub> constant</div>
+      <div class="subtitle2">SAE on frozen Pythia L6: β<sub>c</sub> constant</div>
       <canvas id="regime1" width="400" height="200"></canvas>
     </div>
     <div>
       <div class="label" style="color:var(--green)">(ii) Fold-back (spectrum)</div>
-      <div class="subtitle2">DINO/SimCLR on CIFAR-10/100 — β<sub>c</sub>(t) rises</div>
+      <div class="subtitle2">DINO/SimCLR on CIFAR-10/100: β<sub>c</sub>(t) rises</div>
       <canvas id="regime2" width="400" height="200"></canvas>
     </div>
     <div>
       <div class="label" style="color:var(--purple)">(iii) Delayed escape</div>
-      <div class="subtitle2">Grokking — low dissipation, long Act 2 plateau</div>
+      <div class="subtitle2">Grokking: low dissipation, long Act 2 plateau</div>
       <canvas id="regime3" width="400" height="200"></canvas>
     </div>
     <div>
       <div class="label" style="color:var(--text-3)">(iv) No arc (control)</div>
-      <div class="subtitle2">Rotation-prediction — no clustering pressure</div>
+      <div class="subtitle2">Rotation-prediction: no clustering pressure</div>
       <canvas id="regime4" width="400" height="200"></canvas>
     </div>
   </div>
@@ -346,8 +346,8 @@
 
   <p>
     At the Hessian-pitchfork onset, the unstable subspace is shared by all K−1
-    anti-symmetric modes. Each atom selects a direction from this common manifold
-    — and that initial direction is <em>preserved</em> as it grows toward the
+    anti-symmetric modes. Each atom selects a direction from this common manifold;
+    that initial direction is then <em>preserved</em> as it grows toward the
     attractor. We call this the <strong>feature lottery</strong>.
   </p>
 
@@ -396,7 +396,7 @@
     <strong>Act 2:</strong> Metastable plateau, length set by dissipation.
     <strong>Act 3:</strong> Escape at step 8900 ± 864 (canonical p=97, WD=1.0).
     The indicator log(β/β<sub>c</sub>) ≈ +3 at step 100 already places the trajectory
-    in Act 2 — providing an early empirical forecast of grokking roughly
+    in Act 2, providing an early empirical forecast of grokking roughly
     8,400 steps before test accuracy changes.
   </div>
 </div>
@@ -409,7 +409,7 @@
 
   <p>
     The Hessian-pitchfork crossing (§① / Remark 1) marks when the symmetric
-    state becomes <em>unstable</em> — not when the macroscopic transition
+    state becomes <em>unstable</em>, not when the macroscopic transition
     fires. To test that the plateau length is genuinely dissipation-controlled,
     we sweep weight decay (a knob that does <em>not</em> shift the crossing)
     and measure escape time:
@@ -437,7 +437,7 @@
     monotonically as γ ↓ across two decades (8.9k → 147k steps) and diverges
     at γ = 0 (0/3 escape in 50k). The power-law exponent is an empirical
     characterization of this grokking setup, not a derivation from the
-    bifurcation framework — a separate experiment in a different regime
+    bifurcation framework; a separate experiment in a different regime
     (deep / wide barrier) could plausibly land in the activation-dominated
     Kramers limit instead.
   </div>
@@ -468,7 +468,7 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// HiDPI canvas upgrade — sharpens all canvases on Retina/HiDPI screens
+// HiDPI canvas upgrade: sharpens all canvases on Retina/HiDPI screens
 // ═══════════════════════════════════════════════════════════════
 const DPR = window.devicePixelRatio || 1;
 function upgradeCanvas(c) {
@@ -817,7 +817,7 @@ const grokAnimDuration = 600;  // frames for full cycle
 
 // Synthetic trajectory matching canonical p=97 WD=1.0
 function grokTrajectory(step) {
-  // log_ratio_gmm: TWO pulses — first at β=βc crossing (predicts train acc),
+  // log_ratio_gmm: TWO pulses: first at β=βc crossing (predicts train acc),
   // second at Act 3 escape (predicts test acc takeoff)
   let log_ratio;
   if (step < 40) log_ratio = -2.5 + (step / 40) * 5;        // pulse 1: -2.5 → +2.5
@@ -946,19 +946,45 @@ function drawGrokking() {
   drawCurves(Math.max(2, stepCur));
 
   // ★ Helper to draw a prediction-pulse marker on the purple curve
-  function drawPredictionPulse(stepAtPulse, cycleStart, label, sublabel) {
+  // curved-arrow helper: quadratic Bezier + filled triangular arrowhead at (x2,y2)
+  function drawCurvedArrow(x1, y1, x2, y2, sag, color, lw) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const L = Math.max(1, Math.hypot(dx, dy));
+    const nx = -dy / L, ny = dx / L;             // unit perpendicular
+    const cx = (x1 + x2) / 2 + nx * sag;
+    const cy = (y1 + y2) / 2 + ny * sag;
+    grokCtx.strokeStyle = color;
+    grokCtx.lineWidth = lw;
+    grokCtx.beginPath();
+    grokCtx.moveTo(x1, y1);
+    grokCtx.quadraticCurveTo(cx, cy, x2, y2);
+    grokCtx.stroke();
+    // arrowhead: direction = tangent at end ≈ (x2-cx, y2-cy)
+    const tx = x2 - cx, ty = y2 - cy;
+    const tL = Math.max(1, Math.hypot(tx, ty));
+    const ux = tx / tL, uy = ty / tL;
+    const ah = 7, wing = 0.45;
+    grokCtx.fillStyle = color;
+    grokCtx.beginPath();
+    grokCtx.moveTo(x2, y2);
+    grokCtx.lineTo(x2 - ah*ux + ah*uy*wing, y2 - ah*uy - ah*ux*wing);
+    grokCtx.lineTo(x2 - ah*ux - ah*uy*wing, y2 - ah*uy + ah*ux*wing);
+    grokCtx.closePath();
+    grokCtx.fill();
+  }
+
+  function drawPredictionPulse(stepAtPulse, cycleStart, label, sublabel, yShift) {
     if (cycleT < cycleStart) return;
     const pulse = Math.max(0, 1 - (cycleT - cycleStart) / 0.18);
     const r = grokTrajectory(stepAtPulse);
     const xPred = xToPx(stepAtPulse);
     const yPred = yToPxR(r.log_ratio);            // ON the purple curve
-    // solid ring
+    // ring
     grokCtx.strokeStyle = `rgba(142, 68, 173, 0.9)`;
     grokCtx.lineWidth = 1.8 + pulse * 1.5;
     grokCtx.beginPath();
     grokCtx.arc(xPred, yPred, 6 + pulse * 7, 0, Math.PI * 2);
     grokCtx.stroke();
-    // shockwave (fresh only)
     if (pulse > 0) {
       grokCtx.strokeStyle = `rgba(142, 68, 173, ${0.3 * pulse})`;
       grokCtx.lineWidth = 1.0;
@@ -966,29 +992,52 @@ function drawGrokking() {
       grokCtx.arc(xPred, yPred, 14 + (1 - pulse) * 28, 0, Math.PI * 2);
       grokCtx.stroke();
     }
-    grokCtx.fillStyle = `rgba(142, 68, 173, 0.95)`;
+    // label sits LEFT of marker, right-aligned; yShift moves whole label vertically
+    const mainColor = 'rgba(142, 68, 173, 0.95)';
+    const subColor  = 'rgba(142, 68, 173, 0.7)';
+    // pick label-right anchor: well clear of marker so arrow has room
+    const labelRight = xPred - 26;
+    const mainY = yPred + yShift - 4;
+    const subY  = yPred + yShift + 9;
+    grokCtx.textAlign = 'right';
+    grokCtx.fillStyle = mainColor;
     grokCtx.font = 'bold 11px sans-serif';
-    grokCtx.fillText(label, xPred + 14, yPred - 6);
-    grokCtx.fillStyle = `rgba(142, 68, 173, 0.65)`;
+    grokCtx.fillText(label, labelRight, mainY);
+    grokCtx.fillStyle = subColor;
     grokCtx.font = '9.5px sans-serif';
-    grokCtx.fillText(sublabel, xPred + 14, yPred + 7);
+    grokCtx.fillText(sublabel, labelRight, subY);
+    grokCtx.textAlign = 'left';
+    // arrow: start exactly at label's right edge midpoint;
+    //        end exactly on ring edge along (start → ring center) line
+    const startX = labelRight + 4;
+    const startY = (mainY + subY) / 2 - 2;          // visual center between two text lines
+    const dxA = xPred - startX, dyA = yPred - startY;
+    const Larr = Math.max(1, Math.hypot(dxA, dyA));
+    const ringR = 6 + pulse * 7;
+    const endX = xPred - (dxA / Larr) * (ringR + 2);
+    const endY = yPred - (dyA / Larr) * (ringR + 2);
+    // sag: negative bows the elbow the opposite way (over-the-top arc for upward labels)
+    const sag = yShift < -10 ? -10 : 0;
+    drawCurvedArrow(startX, startY, endX, endY, sag, mainColor, 1.4);
   }
-  // Pulse 1: β crosses βc at step 20 → predicts train_acc rising
+  // Pulse 1: β crosses βc at step 20 — this is paper's main grokking-prediction claim
   drawPredictionPulse(
     20,
     Math.log10(20) / Math.log10(grokTotalSteps),
-    '← train fit predicted from here',
-    '(β crosses β_c; train_acc still ~0)'
+    'grokking predicted from here',
+    '(in Act 2; ~8,400 steps ahead)',
+    0       // no vertical shift; label sits at curve level
   );
-  // Pulse 2: Act 3 escape onset at step 8500 → predicts test_acc takeoff
+  // Pulse 2: Act 3 escape onset at step 8500 — imminent test_acc takeoff
   drawPredictionPulse(
     8500,
     Math.log10(8500) / Math.log10(grokTotalSteps),
-    '← grokking predicted from here',
-    '(test_acc still flat; takeoff ~300 steps away)'
+    'Act 3 escape onset',
+    '(test_acc rises in ~300 steps)',
+    -28     // shift label up so curve doesn't run through text
   );
 
-  // ★ Legend — upper-LEFT, 4 entries
+  // ★ Legend: upper-LEFT, 4 entries
   const legY = margin.t + 14;
   const legX = margin.l + 12;
   grokCtx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -1094,7 +1143,7 @@ function drawKramers() {
   kramersCtx.fillStyle = '#8b95a6'; kramersCtx.font = '10px sans-serif';
   kramersCtx.fillText('200k step horizon', margin.l + plotW - 100, y200k - 4);
 
-  // Fits — animated reveal up to current γ
+  // Fits, animated reveal up to current γ
   const γMax = xLo + (xHi - xLo) * (kramersT / 500);
   // Kramers
   kramersCtx.strokeStyle = '#c0392b'; kramersCtx.lineWidth = 2.5;
